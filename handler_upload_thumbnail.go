@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"mime"
@@ -66,7 +68,14 @@ func (cfg *apiConfig) handlerUploadThumbnail(w http.ResponseWriter, r *http.Requ
 		respondWithError(w, http.StatusUnauthorized, "Not found video", err)
 		return
 	}
-	path := filepath.Join(cfg.assetsRoot, fmt.Sprintf("%s%s", videoIDString, ext))
+	mask := make([]byte, 32) //
+	_, err = rand.Read(mask)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "Can't generate random filename", err)
+		return
+	}
+	maskEncode := base64.RawURLEncoding.EncodeToString(mask)
+	path := filepath.Join(cfg.assetsRoot, fmt.Sprintf("%s%s", maskEncode, ext))
 	newFile, err := os.Create(path)
 	if err != nil {
 		respondWithError(w, http.StatusUnauthorized, "Not found video", err)
