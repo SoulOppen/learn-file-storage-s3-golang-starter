@@ -56,10 +56,6 @@ func (cfg *apiConfig) handlerUploadVideo(w http.ResponseWriter, r *http.Request)
 		respondWithError(w, http.StatusBadRequest, "Invalid media type", err)
 		return
 	}
-	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid content type", err)
-		return
-	}
 
 	if exts != "video/mp4" {
 		respondWithError(w, http.StatusUnsupportedMediaType, "Only MP4 videos are allowed", err)
