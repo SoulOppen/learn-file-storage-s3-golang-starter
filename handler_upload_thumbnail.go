@@ -48,10 +48,6 @@ func (cfg *apiConfig) handlerUploadThumbnail(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	defer file.Close()
-	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Can't read file", err)
-		return
-	}
 	mediaType := headerFile.Header.Get("Content-Type")
 	exts, err := mime.ExtensionsByType(mediaType)
 	if err != nil || len(exts) == 0 {
@@ -68,7 +64,7 @@ func (cfg *apiConfig) handlerUploadThumbnail(w http.ResponseWriter, r *http.Requ
 		respondWithError(w, http.StatusUnauthorized, "Not found video", err)
 		return
 	}
-	mask := make([]byte, 32) //
+	mask := make([]byte, 32)
 	_, err = rand.Read(mask)
 	if err != nil {
 		respondWithError(w, http.StatusUnauthorized, "Can't generate random filename", err)
@@ -94,6 +90,5 @@ func (cfg *apiConfig) handlerUploadThumbnail(w http.ResponseWriter, r *http.Requ
 		respondWithError(w, http.StatusBadRequest, "Not Updated video", err)
 		return
 	}
-	fmt.Println(*video.ThumbnailURL)
 	respondWithJSON(w, http.StatusOK, video)
 }
