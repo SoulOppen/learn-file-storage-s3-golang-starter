@@ -87,12 +87,38 @@ func (cfg *apiConfig) handlerUploadVideo(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	maskEncode := base64.RawURLEncoding.EncodeToString(mask)
-	key := fmt.Sprintf("video/%s.mp4", maskEncode)
-	fmt.Println(maskEncode)
+	processedPath, err := processVideoForFastStart(f.Name())
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Can't process video", err)
+		return
+	}
+	defer os.Remove(processedPath)
+
+	str, err := getVideoAspectRatio(processedPath)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Can't get file info", err)
+		return
+	}
+	var strKey string
+	switch str {
+	case "16:9":
+		strKey = "landscape"
+	case "9:16":
+		strKey = "portrait"
+	default:
+		strKey = "other"
+	}
+	key := fmt.Sprintf("video/%s/%s.mp4", strKey, maskEncode)
+	processedFile, err := os.Open(processedPath)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Can't open processed file", err)
+		return
+	}
+	defer processedFile.Close()
 	_, err = cfg.s3Client.PutObject(context.Background(), &s3.PutObjectInput{
 		Bucket:      aws.String(cfg.s3Bucket),
 		Key:         aws.String(key),
-		Body:        f,
+		Body:        processedFile,
 		ContentType: aws.String(mediaType),
 	})
 	if err != nil {
