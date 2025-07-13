@@ -123,12 +123,13 @@ func (cfg *apiConfig) handlerUploadVideo(w http.ResponseWriter, r *http.Request)
 	}
 	defer os.Remove(f.Name())
 	defer f.Close()
-	path := fmt.Sprintf("https://%s.s3.%s.amazonaws.com/%s", cfg.s3Bucket, cfg.s3Region, key)
+	path := fmt.Sprintf("%s/%s", cfg.s3CfDistribution, key)
 	video.VideoURL = &path
 	err = cfg.db.UpdateVideo(video)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, "Not Updated video", err)
 		return
 	}
+
 	respondWithJSON(w, http.StatusOK, video)
 }
